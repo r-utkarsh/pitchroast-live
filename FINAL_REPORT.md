@@ -45,7 +45,7 @@ pitchroast-live/
 ├─ FINAL_REPORT.md
 ├─ PROGRESS.md, DECISIONS.md, STATUS.md, HANDOFF.md
 ├─ package.json, package-lock.json
-├─ vite.config.ts, vitest.config.ts, playwright.config.ts
+├─ vite.config.mts, vitest.config.mts, playwright.config.ts
 ├─ tailwind.config.cjs, postcss.config.cjs
 ├─ tsconfig.json, vercel.json, index.html
 ├─ .env.example, .gitignore
@@ -86,10 +86,12 @@ npm audit --omit=dev
 - Creator starts the 5-minute roast timer; the countdown syncs to the second reviewer; “/” focuses the composer.
 - `npm run verify` and `npm run test:e2e` pass; secret scans are clean; ports 5173/8787 are free after tests.
 - Screenshots were generated from live rooms at exact sizes and are referenced by the write-up.
+- The Vercel deployment was created with all four environment variables. Its static site loaded, but the first function build kept ESM output and every `/api/*` call failed with `FUNCTION_INVOCATION_FAILED` because of extensionless imports. The CommonJS fix is verified locally (full suite plus a compiled-function simulation) and needs one push/redeploy.
 
 ## PENDING
 
-- Human-only: deploy to Vercel, set the four env vars, test on two devices, fill the write-up placeholders and regenerate the PDF, record the demo video, invite real reviewers, collect traction proof, submit before **Nov 22, 2026**.
+- Push the deployment fix (`package.json`, `tsconfig.json`, `vite.config.mts`, `vitest.config.mts`, docs), let Vercel redeploy, and confirm `/api/token` returns 405 for a GET and a room creates successfully.
+- Human-only: test on two devices, fill the write-up placeholders and regenerate the PDF, record the demo video, invite real reviewers, collect traction proof, submit before **Nov 22, 2026**.
 - Manual Firefox, Safari and Edge pass (only Chromium available locally).
 - The timer’s ended/locked state is unit-tested but not run for five real minutes in e2e.
 
@@ -106,6 +108,6 @@ npm audit --omit=dev
 
 ## First three things the human should do next
 
-1. Deploy to Vercel with `NEXCONN_APP_KEY`, `NEXCONN_APP_SECRET`, `NEXCONN_REGION` and `VITE_NEXCONN_APP_KEY`, then test a room on two devices.
+1. Commit and push the deployment fix, let Vercel redeploy, confirm `/api/token` returns 405 for a GET (not 500), then create a room and test it on two devices.
 2. Replace the four placeholders in `submission/writeup.html`, run `node scripts/render-writeup.mjs`, and verify the PDF has no secret and no placeholders left.
 3. Invite real reviewers for traction proof, record the 2-minute demo using `submission/demo-script.md`, and submit using `submission/CHECKLIST.md` before Nov 22, 2026.

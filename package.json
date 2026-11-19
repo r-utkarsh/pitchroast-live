@@ -2,7 +2,6 @@
   "name": "pitchroast-live",
   "private": true,
   "version": "0.1.0",
-  "type": "module",
   "scripts": {
     "dev": "concurrently -k -n api,web -c cyan,magenta \"npm:dev:api\" \"npm:dev:web\"",
     "dev:web": "vite",

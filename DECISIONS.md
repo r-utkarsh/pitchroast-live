@@ -47,6 +47,10 @@ One line per decision (what, why). Nexconn facts were verified against the live 
 - Submission screenshots are captured by `scripts/capture-submission.mjs` with two live browser contexts; the write-up is rendered to PDF by `scripts/render-writeup.mjs`. Both use system fonts and no external assets, and the write-up keeps the required placeholder tokens for the human to fill.
 - No license file is added because the license is the owner's choice, as the phase requires.
 
+## Deployment fix (2026-11-19)
+- The first Vercel deployment returned `FUNCTION_INVOCATION_FAILED` for every `/api/*` request, including `GET`. Root cause: `package.json` declared `"type": "module"`, so Vercel kept the compiled API files as ESM, while their relative imports (`../server/handlers/token`) had no extensions. Node ESM refused to resolve them and the function crashed before the handler ran. The exact `ERR_MODULE_NOT_FOUND` was reproduced locally against the TypeScript output.
+- Removed `"type": "module"` so Vercel compiles the API functions from ESM to CommonJS, where extensionless imports resolve. The two Vite configs were renamed to `.mts` so they remain ESM and build without warnings. The fix was verified with `npm run verify`, `npm run test:e2e`, a local live `/api/token` call, and a CJS simulation of the compiled functions; the Vite configs must stay `.mts` unless `"type": "module"` is restored together with explicit `.js` import extensions.
+
 ## Nexconn facts (verified Nov 2026)
 Sources: docs.nexconn.ai (web SDK, server integration, data centers, users, group channels) plus live calls from this machine. Live verification used the Singapore app in .env.
 

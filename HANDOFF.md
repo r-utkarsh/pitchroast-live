@@ -9,10 +9,12 @@ All five phases are complete. There is no further code phase; the remaining work
 - **Phase 5:** optional 5-minute roast timer (creator flag, synced countdown, composer lock, restart), distinct-reviewer count, “/” composer shortcut, README, 7 submission screenshots at 1280x800/375x812, write-up HTML + PDF with required placeholders, sample export, 2-minute demo script, submission checklist, final report.
 - `npm run verify` passes (77 tests across 10 files, build, secret scan). `npm run test:e2e` passes 4 live tests in ~28 s. Ports 5173/8787 are free; no project processes are left running.
 - Secret scans are clean (dist and 92 project files, raw and base64). `npm audit --omit=dev` reports 2 moderate react-router advisories and no high/critical issues.
+- **Vercel deployment fix (2026-11-19):** the static app deployed, but every `/api/*` call returned `FUNCTION_INVOCATION_FAILED`. Cause: the package was `"type": "module"` while the compiled functions used extensionless relative imports. Removed the package module type so Vercel emits CommonJS, and renamed the Vite configs to `.mts`. Re-verified with the full local suite and a Node simulation of the compiled function. The fix is in the working tree and needs a commit/push to redeploy.
 
 ## Not done
 
-- Human-only submission work: GitHub repo/commit, Vercel deploy with four env vars, two-device live test, fill `[PASTE ...]` placeholders, regenerate PDF, record demo video, collect traction proof, submit before Nov 22, 2026. See `submission/CHECKLIST.md`.
+- **Push the deployment fix and redeploy:** commit the `package.json`, `tsconfig.json`, `vite.config.mts`, `vitest.config.mts`, and docs changes, push to `origin/main`, let Vercel redeploy, then confirm `/api/token` returns 405 for a GET (not 500) and a room creates successfully.
+- Human-only submission work: two-device live test, fill `[PASTE ...]` placeholders, regenerate PDF, record demo video, collect traction proof, submit before Nov 22, 2026. See `submission/CHECKLIST.md`.
 - Manual Firefox/Safari/Edge pass (only Chromium installed).
 - Timer end/lock state is unit-tested, not run for a full five minutes in live e2e.
 - `/api/seed-demo` remains intentionally skipped.
@@ -43,8 +45,9 @@ All five phases are complete. There is no further code phase; the remaining work
 - Room IDs are 10 base32 chars (`a-z2-7`), demo rooms `demo-` + 10; channel ID is `pr_` + roomId with `-` -> `_`.
 - Demo rooms open empty; do not insert mock messages into real channels.
 - Playwright’s `webServer` stops the dev servers, but check ports 5173/8787 at the end of any session anyway.
+- **Vercel API functions must stay CommonJS.** `package.json` intentionally has no `"type": "module"`, and the Vite configs are `.mts`. Vercel keeps ESM `.js` output as ESM when the package says module, and the extensionless `../server/...` imports then crash with `ERR_MODULE_NOT_FOUND` / `FUNCTION_INVOCATION_FAILED`. If you re-add `"type": "module"`, add `.js` extensions to every relative import in `api/` and `server/` first.
 - No write git commands. Do not edit AGENTS.md, SPEC.md or the phase files.
 
 ## Next phase starts with
 
-No code phase remains. The human starts with `submission/CHECKLIST.md`: deploy to Vercel with the four environment variables, test on two devices, fill the write-up placeholders and regenerate the PDF, collect traction proof, record the video and submit before Nov 22, 2026.
+No code phase remains. First commit and push the deployment fix, wait for the Vercel redeploy, and confirm `/api/token` returns 405 for a GET and a room creates successfully. Then continue with `submission/CHECKLIST.md`: test on two devices, fill the write-up placeholders and regenerate the PDF, collect traction proof, record the video and submit before Nov 22, 2026.

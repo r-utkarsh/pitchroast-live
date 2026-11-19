@@ -2,20 +2,19 @@
 
 Everything in the project is ready. These are the steps only the human can do (accounts, deployment, recording, final submission).
 
-1. **Create the GitHub repository and commit the project.**
-   - Decide whether `AGENTS.md`, `SPEC.md` and the `phase-*.md` files should be public. If not, move them out of the repository before the first commit.
-   - Confirm `.env` is not committed (it is git-ignored) and that no real App Secret appears in any file. Only `.env.example` with empty values belongs in the repo.
-   - Suggested first commit: `PitchRoast Live — Nexconn Build Challenge 2026`.
+1. **Push the deployment fix.**
+   - The repository already exists at `r-utkarsh/pitchroast-live`. Commit and push the current working-tree changes (`package.json`, `tsconfig.json`, `vite.config.mts`, `vitest.config.mts`, docs) so Vercel rebuilds the API functions as CommonJS.
+   - Confirm `.env` is still git-ignored and no real App Secret appears in any file. Only `.env.example` with empty values belongs in the repo.
+   - Do not re-add `"type": "module"` unless every relative import in `api/` and `server/` gets an explicit `.js` extension.
 
-2. **Deploy to Vercel.**
-   - Import the repository as a Vite project.
-   - Build command: `npm run build`; output directory: `dist`.
-   - Set these four variables for Production, Preview and Development:
+2. **Redeploy on Vercel.**
+   - The project is already imported as a Vite project with these four variables for Production, Preview and Development:
      - `NEXCONN_APP_KEY`
      - `NEXCONN_APP_SECRET`
      - `NEXCONN_REGION` (`singapore`, `north-america` or `saudi-arabia`)
      - `VITE_NEXCONN_APP_KEY` (same value as `NEXCONN_APP_KEY`)
-   - Redeploy after saving the variables. `vercel.json` handles deep-link rewrites.
+   - Wait for the push to trigger a new deployment (or click **Redeploy**), then check `https://pitchroast-live.vercel.app/api/token` is no longer `FUNCTION_INVOCATION_FAILED`. A `405` for a plain browser GET is the expected healthy response; create a room to exercise the real POST.
+   - `vercel.json` handles deep-link rewrites.
 
 3. **Test the live URL on two devices.**
    - Create a room on desktop, copy the link, and open it on a phone with a second reviewer name.
