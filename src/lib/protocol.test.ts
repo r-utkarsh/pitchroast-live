@@ -110,8 +110,10 @@ describe('timer events', () => {
     expect(buildTimer(-1, 10)).toBeNull();
     expect(buildTimer(0, 0)).toBeNull();
     expect(buildTimer(0, 4000)).toBeNull();
+    expect(buildTimer(9_000_000_000_000_000, 10)).toBeNull();
     expect(parseRoomEvent({ pr: 1, k: 'timer', startAt: Number.NaN, durSec: 10 })).toBeNull();
     expect(parseRoomEvent({ pr: 1, k: 'timer', startAt: 0, durSec: Number.POSITIVE_INFINITY })).toBeNull();
+    expect(parseRoomEvent({ pr: 1, k: 'timer', startAt: 9_000_000_000_000_000, durSec: 10 })).toBeNull();
   });
 });
 
@@ -153,11 +155,13 @@ describe('control events', () => {
 
   it('rejects malformed snapshots', () => {
     expect(parseRoomEvent({ ...snapshot, at: -1 })).toBeNull();
+    expect(parseRoomEvent({ ...snapshot, at: 9_000_000_000_000_000 })).toBeNull();
     expect(parseRoomEvent({ ...snapshot, fb: 'nope' })).toBeNull();
     expect(parseRoomEvent({ ...snapshot, v: 'nope' })).toBeNull();
     expect(parseRoomEvent({ ...snapshot, fb: [{ ...snapshot.fb[0], by: 'bad' }] })).toBeNull();
     expect(parseRoomEvent({ ...snapshot, fb: [{ ...snapshot.fb[0], text: '' }] })).toBeNull();
     expect(parseRoomEvent({ ...snapshot, fb: [{ ...snapshot.fb[0], at: -5 }] })).toBeNull();
+    expect(parseRoomEvent({ ...snapshot, fb: [{ ...snapshot.fb[0], at: 9_000_000_000_000_000 }] })).toBeNull();
     expect(parseRoomEvent({ ...snapshot, v: [{ target: 'bad', by: VOTER }] })).toBeNull();
     expect(parseRoomEvent({ ...snapshot, v: [{ target: ID, by: VOTER, bn: 'A' }] })).toEqual({
       ...snapshot,
@@ -165,7 +169,18 @@ describe('control events', () => {
     });
     expect(parseRoomEvent({ ...snapshot, tm: { startAt: 0, durSec: 0 } })).toBeNull();
     expect(parseRoomEvent({ ...snapshot, tm: { startAt: 0, durSec: 4000 } })).toBeNull();
+    expect(parseRoomEvent({ ...snapshot, tm: { startAt: 9_000_000_000_000_000, durSec: 10 } })).toBeNull();
     expect(parseRoomEvent({ ...snapshot, tr: 'yes' })).toEqual(snapshot);
+  });
+
+  it('rejects out-of-range sync timestamps', () => {
+    expect(parseRoomEvent({ pr: 1, k: 'sync', at: -1 })).toBeNull();
+    expect(parseRoomEvent({ pr: 1, k: 'sync', at: 9_000_000_000_000_000 })).toBeNull();
+    expect(parseRoomEvent({ pr: 1, k: 'sync', at: 8_640_000_000_000_000 })).toEqual({
+      pr: 1,
+      k: 'sync',
+      at: 8_640_000_000_000_000,
+    });
   });
 
   it('drops duplicate feedback and votes instead of failing', () => {

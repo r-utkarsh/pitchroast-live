@@ -9,7 +9,13 @@ import {
 } from '@nexconn/chat';
 import { SEND_LIMIT, SEND_WINDOW_MS, takeSendSlot } from './cooldown';
 import { parseRoomEvent, serializeEvent, type RoomEvent } from './protocol';
-import { channelIdForRoom, isValidRoomId, isValidUserId, normalizeName } from './validation';
+import {
+  channelIdForRoom,
+  isValidRoomId,
+  isValidUserId,
+  MAX_TIMESTAMP,
+  normalizeName,
+} from './validation';
 
 export type ChatStatus =
   | 'idle'
@@ -153,7 +159,12 @@ async function requestJoin(userId: string, roomId: string): Promise<string> {
 
   const data: unknown = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new ChatError('join', 'Could not join this room. Please retry.');
+    throw new ChatError(
+      'join',
+      response.status === 429
+        ? 'Too many attempts. Wait a moment and retry.'
+        : 'Could not join this room. Please retry.',
+    );
   }
 
   if (typeof data === 'object' && data !== null) {
@@ -470,7 +481,10 @@ class NexconnChatAdapter implements ChatAdapter {
     if (!senderId) return null;
 
     const sentAt =
-      typeof message.sentTime === 'number' && Number.isFinite(message.sentTime)
+      typeof message.sentTime === 'number' &&
+      Number.isFinite(message.sentTime) &&
+      message.sentTime >= 0 &&
+      message.sentTime <= MAX_TIMESTAMP
         ? message.sentTime
         : Date.now();
 

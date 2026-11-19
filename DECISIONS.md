@@ -21,6 +21,32 @@ One line per decision (what, why). Nexconn facts were verified against the live 
 - Sync/state control messages do not consume the human send cooldown (5 per 10 s), so backfill cannot get stuck behind a user's quota. Every event, including control messages, still goes through strict protocol parsing.
 - Snapshot size is capped at 11 KB and 200 feedback items, well below the Nexconn 128 KB text-message content limit (MAX_MESSAGE_CONTENT_BYTES = 131072, checked in @nexconn/engine).
 
+## Phase 3 UI
+- Recent rooms store the encoded room payload alongside the title, so a recent room reopens with its project details; entries without a payload still render as plain text instead of a broken link.
+- "Open as another reviewer" appends `?as=new` and uses `window.open` with noopener: some browsers clone sessionStorage into the new tab, so the flag forces the name gate and a fresh `u_...` identity, then the flag is stripped with replace navigation.
+- Room behavior lives in one `useChatRoom` hook (adapter lifecycle, ingest, sync/snapshot, optimistic list, votes, reconnect) so pages stay presentational; state is keyed by room + userId and reset if either changes.
+- Success and failure feedback use inline Banners plus per-message failed cards (Retry/Remove) instead of toasts: nothing auto-dismisses and every error stays reachable by keyboard.
+- The optional `/api/seed-demo` endpoint is skipped (SPEC marks it optional): the demo route opens a real empty Nexconn room with the built-in sample project, and server-side message sending is not part of the implemented REST surface. No fake/mock messages are inserted.
+- `/__smoke` is rendered only when `import.meta.env.DEV` is true; the production bundle was grepped for smoke strings and is clean.
+
+## Phase 4 hardening
+- When browser storage is blocked, install an in-memory Storage on window before render. The Nexconn SDK needs localStorage to connect, and defining the shim keeps live chat usable; the app's own readers still fall back to module memory if the property cannot be replaced. The shim is per page load, so a reload loses identity and recent rooms in that environment.
+- Bound every protocol timestamp and SDK `sentTime` to the JavaScript Date maximum, and guard date formatting in FeedbackCard. Out-of-range values passed the old finite/non-negative checks and `toISOString()` threw a RangeError, which could take down the room render.
+- Lightened ink-500 from #4a5573 to #77819c and darkened accent-500 from #6366f1 to #5f62ee. Small muted text was 2.56:1 and white on the primary button 4.47:1; both now pass WCAG AA (4.87:1 and 4.70:1). Tag chip combinations were already 6.2–9.2:1 and are unchanged.
+- An unexpected disconnect while online creates a fresh adapter and token once (8 s delay), because a stale token also surfaces as a disconnect. Offline disconnects wait for the browser online event instead, and the manual Retry button resets the one-shot flag.
+- Separate friendly 429 messages for `/api/token` and `/api/join`; the server also sends a numeric Retry-After header, and the rate-limit bucket is checked before body parsing.
+- Server handler and HTTP utilities are tested directly (method, JSON, body size, rate limit, Retry-After, error shape) instead of mocking the Nexconn SDK. The real SDK paths stay covered by the live Playwright suite.
+- The Playwright storage test denies both storage APIs and still expects a live room, which verifies the shim; it also confirms recent rooms are gone after a reload because the replacement storage is in-memory.
+- npm audit reports two moderate react-router advisories. The only offered fix is react-router-dom 7.18.6 (a breaking major upgrade), so it was not applied; there are no high or critical findings.
+
+## Phase 5 stretch and submission
+- The roast timer is a fixed 300-second round. The creating tab marks the room in sessionStorage, because rooms have no server-side owner role and the creator is only known client-side; that tab can start the first round and a new round after the timer ends. The existing `timer` protocol event carries `startAt` and `durSec`, every reviewer derives the countdown from it, and the composer locks at zero.
+- The online count stays as the number of distinct reviewers seen in room state instead of adding SDK presence: the reducer already tracks every reviewer who sent an event or appeared in a snapshot, and presence would add another subscription surface for little demo value.
+- "/" focuses the composer only when focus is outside an input, textarea, select or contenteditable element, so typing a slash in feedback is unaffected and the shortcut works from anywhere in the room.
+- `/api/seed-demo` remains skipped and is documented as a limitation; the demo room still opens a real empty Nexconn channel with the sample project.
+- Submission screenshots are captured by `scripts/capture-submission.mjs` with two live browser contexts; the write-up is rendered to PDF by `scripts/render-writeup.mjs`. Both use system fonts and no external assets, and the write-up keeps the required placeholder tokens for the human to fill.
+- No license file is added because the license is the owner's choice, as the phase requires.
+
 ## Nexconn facts (verified Nov 2026)
 Sources: docs.nexconn.ai (web SDK, server integration, data centers, users, group channels) plus live calls from this machine. Live verification used the Singapore app in .env.
 

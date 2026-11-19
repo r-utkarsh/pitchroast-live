@@ -2,6 +2,7 @@ import {
   FEEDBACK_ID_RE,
   isValidUserId,
   LIMITS,
+  MAX_TIMESTAMP,
   normalizeName,
   randomHex,
   textLength,
@@ -107,7 +108,7 @@ export function buildVote(target: string, on: boolean): VoteEvent | null {
 }
 
 export function buildTimer(startAt: number, durSec: number): TimerEvent | null {
-  if (!Number.isFinite(startAt) || startAt < 0) return null;
+  if (!Number.isFinite(startAt) || startAt < 0 || startAt > MAX_TIMESTAMP) return null;
   if (!Number.isFinite(durSec) || durSec < 1 || durSec > MAX_TIMER_SECONDS) return null;
   return { pr: 1, k: 'timer', startAt: Math.floor(startAt), durSec: Math.floor(durSec) };
 }
@@ -124,7 +125,14 @@ function parseSnapshotFeedback(value: unknown): SnapshotFeedback | null {
   if (textLength(value.text) < 1 || textLength(value.text) > LIMITS.feedbackMax) return null;
   if (value.text.trim().length === 0) return null;
   if (!isValidUserId(value.by)) return null;
-  if (typeof value.at !== 'number' || !Number.isFinite(value.at) || value.at < 0) return null;
+  if (
+    typeof value.at !== 'number' ||
+    !Number.isFinite(value.at) ||
+    value.at < 0 ||
+    value.at > MAX_TIMESTAMP
+  ) {
+    return null;
+  }
 
   return {
     id: value.id,
@@ -174,7 +182,14 @@ export function parseRoomEvent(input: unknown): RoomEvent | null {
   }
 
   if (value.k === 'timer') {
-    if (typeof value.startAt !== 'number' || !Number.isFinite(value.startAt) || value.startAt < 0) return null;
+    if (
+      typeof value.startAt !== 'number' ||
+      !Number.isFinite(value.startAt) ||
+      value.startAt < 0 ||
+      value.startAt > MAX_TIMESTAMP
+    ) {
+      return null;
+    }
     if (
       typeof value.durSec !== 'number' ||
       !Number.isFinite(value.durSec) ||
@@ -192,12 +207,26 @@ export function parseRoomEvent(input: unknown): RoomEvent | null {
   }
 
   if (value.k === 'sync') {
-    if (typeof value.at !== 'number' || !Number.isFinite(value.at) || value.at < 0) return null;
+    if (
+      typeof value.at !== 'number' ||
+      !Number.isFinite(value.at) ||
+      value.at < 0 ||
+      value.at > MAX_TIMESTAMP
+    ) {
+      return null;
+    }
     return { pr: 1, k: 'sync', at: Math.floor(value.at) };
   }
 
   if (value.k === 'state') {
-    if (typeof value.at !== 'number' || !Number.isFinite(value.at) || value.at < 0) return null;
+    if (
+      typeof value.at !== 'number' ||
+      !Number.isFinite(value.at) ||
+      value.at < 0 ||
+      value.at > MAX_TIMESTAMP
+    ) {
+      return null;
+    }
     if (!Array.isArray(value.fb) || value.fb.length > MAX_SNAPSHOT_FEEDBACK) return null;
     if (!Array.isArray(value.v) || value.v.length > MAX_SNAPSHOT_VOTES) return null;
 
@@ -226,7 +255,14 @@ export function parseRoomEvent(input: unknown): RoomEvent | null {
     if (value.tm !== undefined) {
       if (!isRecord(value.tm)) return null;
       const { startAt, durSec } = value.tm;
-      if (typeof startAt !== 'number' || !Number.isFinite(startAt) || startAt < 0) return null;
+      if (
+        typeof startAt !== 'number' ||
+        !Number.isFinite(startAt) ||
+        startAt < 0 ||
+        startAt > MAX_TIMESTAMP
+      ) {
+        return null;
+      }
       if (typeof durSec !== 'number' || !Number.isFinite(durSec)) return null;
       const seconds = Math.floor(durSec);
       if (seconds < 1 || seconds > MAX_TIMER_SECONDS) return null;

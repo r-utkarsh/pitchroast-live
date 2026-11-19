@@ -15,6 +15,9 @@ export const FEEDBACK_ID_RE = /^[a-f0-9]{16}$/;
 
 const BASE32_ALPHABET = 'abcdefghijklmnopqrstuvwxyz234567';
 
+/** Largest timestamp a JavaScript Date can represent. */
+export const MAX_TIMESTAMP = 8_640_000_000_000_000;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -145,7 +148,10 @@ export function createRoomPayload(input: {
   if (!title || !pitch || !url) return null;
 
   const createdAt =
-    typeof input.createdAt === 'number' && Number.isFinite(input.createdAt) && input.createdAt >= 0
+    typeof input.createdAt === 'number' &&
+    Number.isFinite(input.createdAt) &&
+    input.createdAt >= 0 &&
+    input.createdAt <= MAX_TIMESTAMP
       ? Math.floor(input.createdAt)
       : Date.now();
 
@@ -162,7 +168,14 @@ export function validateRoomPayload(value: unknown): RoomPayload | null {
   const createdAt = value.c;
 
   if (!title || !pitch || !url) return null;
-  if (typeof createdAt !== 'number' || !Number.isFinite(createdAt) || createdAt < 0) return null;
+  if (
+    typeof createdAt !== 'number' ||
+    !Number.isFinite(createdAt) ||
+    createdAt < 0 ||
+    createdAt > MAX_TIMESTAMP
+  ) {
+    return null;
+  }
 
   return { v: 1, t: title, u: url, p: pitch, c: Math.floor(createdAt) };
 }

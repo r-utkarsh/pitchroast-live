@@ -24,7 +24,3 @@ export function normalizeRoomId(value: unknown): string | null {
 export function channelIdFor(roomId: string): string {
   return `pr_${roomId.replace(/-/g, '_')}`;
 }
-
-export function groupNameFor(roomId: string): string {
-  return `PitchRoast ${roomId}`.slice(0, 64);
-}

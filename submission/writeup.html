@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PitchRoast Live — Nexconn Build Challenge 2026</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #101426;
+      --muted: #4c5670;
+      --line: #d9deea;
+      --accent: #4f52d9;
+      --soft: #f4f6fb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #fff;
+      color: var(--ink);
+      font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    main { max-width: 900px; margin: 0 auto; padding: 48px 40px 64px; }
+    h1 { font-size: 42px; line-height: 1.05; letter-spacing: -0.03em; margin: 0 0 8px; }
+    h2 { font-size: 22px; letter-spacing: -0.01em; margin: 34px 0 10px; padding-top: 18px; border-top: 1px solid var(--line); }
+    h3 { font-size: 15px; margin: 18px 0 6px; }
+    p { margin: 0 0 12px; }
+    ul, ol { margin: 0 0 14px; padding-left: 22px; }
+    li { margin: 4px 0; }
+    .eyebrow { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 12px; }
+    .lede { font-size: 18px; color: var(--muted); max-width: 700px; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 6px; }
+    .pill { border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; font-size: 12px; color: var(--muted); }
+    .pill strong { color: var(--ink); }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+    .card { border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; background: var(--soft); break-inside: avoid; }
+    .card h3 { margin-top: 0; }
+    figure { margin: 16px 0; break-inside: avoid; }
+    figure img { display: block; width: 100%; border: 1px solid var(--line); border-radius: 12px; }
+    figcaption { margin-top: 6px; font-size: 12px; color: var(--muted); }
+    .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+    .shots figure { margin: 0; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 2px 6px; }
+    pre { background: var(--soft); border: 1px solid var(--line); border-radius: 10px; padding: 14px; overflow: hidden; font-size: 12px; line-height: 1.45; }
+    .placeholder { background: #fff4d6; border: 1px dashed #b98b00; border-radius: 5px; padding: 0 5px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; }
+    .callout { border-left: 4px solid var(--accent); background: var(--soft); padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 16px 0; break-inside: avoid; }
+    .small { font-size: 12px; color: var(--muted); }
+    .pagebreak { break-before: page; }
+    @media print {
+      main { max-width: none; padding: 0; }
+      a { color: inherit; text-decoration: none; }
+      h2 { break-after: avoid; }
+    }
+    @media (max-width: 640px) {
+      main { padding: 28px 20px 48px; }
+      h1 { font-size: 32px; }
+      .grid, .shots { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <p class="eyebrow">Nexconn Build Challenge 2026 · Open Innovation</p>
+  <h1>PitchRoast Live</h1>
+  <p class="lede">One link where reviewers leave tagged, upvotable notes on a pitch — and the builder leaves with a Markdown to-do list.</p>
+
+  <div class="meta">
+    <span class="pill"><strong>Track:</strong> Open Innovation</span>
+    <span class="pill"><strong>Live app:</strong> [PASTE LIVE URL]</span>
+    <span class="pill"><strong>Repository:</strong> [PASTE GITHUB URL]</span>
+    <span class="pill"><strong>App Key:</strong> [PASTE APP KEY]</span>
+  </div>
+
+  <h2>The problem</h2>
+  <p>Builders share a project link in a group chat and get feedback scattered across replies, DMs and calls. The best notes get buried, the same point is repeated, and none of it turns into a to-do list. Reviewers also lack a shared vocabulary: one person critiques the hook, another rewrites the onboarding, and the builder has to sort it all out later.</p>
+  <p>PitchRoast Live puts the project and the review in one room. Every note carries a shared tag — <strong>Hook</strong> (is it catchy?), <strong>Clarity</strong> (is it easy to understand?) or <strong>Fix</strong> (what should change?). Reviewers upvote the sharpest points, and the owner exports the result as a Markdown checklist.</p>
+
+  <h2>The solution</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>One-link rooms</h3>
+      <p>The project title, URL and pitch travel inside the share link. No account, no database, no setup. The room ID and payload are validated before connecting.</p>
+    </div>
+    <div class="card">
+      <h3>Structured live feedback</h3>
+      <p>Project card on one side, live chat on the other. Filter by tag, sort by votes, and see updates in every open room within a second or two.</p>
+    </div>
+    <div class="card">
+      <h3>Export that closes the loop</h3>
+      <p>Copy or download a Markdown to-do list grouped by Fix, Clarity and Hook, with vote counts and authors.</p>
+    </div>
+    <div class="card">
+      <h3>Built for the messy path</h3>
+      <p>Late-joiner backfill, retry banners, offline recovery, blocked-storage fallback, mobile layouts and accessible controls.</p>
+    </div>
+  </div>
+
+  <h2>Target users</h2>
+  <ul>
+    <li><strong>Indie builders and hackathon teams</strong> who want fast, useful feedback without another account or form.</li>
+    <li><strong>Design partners and communities</strong> running pitch reviews, demo days or async critique sessions.</li>
+    <li><strong>Accelerators and product teams</strong> who need a repeatable review format with a clear output.</li>
+  </ul>
+
+  <h2>How it uses the Nexconn Chat SDK</h2>
+  <p>Chat is not a mock or a side channel. The app initializes the Nexconn Chat SDK with the public App Key, connects with a server-issued user token, joins a real Nexconn <strong>group channel</strong> named <span class="mono">pr_&lt;roomId&gt;</span>, and sends and receives text messages through the SDK.</p>
+  <ol>
+    <li>The browser calls <span class="mono">NCEngine.initialize</span> once with the public App Key.</li>
+    <li><span class="mono">POST /api/token</span> runs server-side with the App Key and App Secret and returns only a user token.</li>
+    <li><span class="mono">POST /api/join</span> creates the group channel with the first reviewer as owner, or joins it if it already exists.</li>
+    <li>Each event is a compact JSON text message: feedback, vote, timer, or a <span class="mono">sync</span>/<span class="mono">state</span> control message for late-joiner backfill.</li>
+    <li>Messages arrive through the SDK message handler and SDK history; every payload is parsed and validated by the app. The custom React UI never renders chat as HTML.</li>
+  </ol>
+  <p>Nexconn's group history is membership-scoped, so a reviewer who joins later cannot read earlier messages. The app solves this with the SDK itself: the late joiner sends a <span class="mono">sync</span> request, an online member replies with a <span class="mono">state</span> snapshot, and the new reviewer reconstructs the room.</p>
+
+  <h2>Architecture</h2>
+  <pre>Browser (React + Nexconn Chat SDK)
+  │  POST /api/token  ·  POST /api/join
+  ▼
+Vercel functions / local Express (server/handlers/*)
+  │  App Key + App Secret (server only)
+  ▼
+Nexconn Server API ── token, group-channel create/join
+
+Browser A ──┐
+Browser B ──┼── Nexconn group channel pr_&lt;roomId&gt;
+Browser C ──┘   text messages: {"pr":1,"k":"fb"|"vote"|"timer"|"sync"|"state",...}
+
+Room link: /r/&lt;10-char-room-id&gt;?d=&lt;url-safe-base64 project payload&gt;</pre>
+
+  <h2>Screenshots</h2>
+  <figure>
+    <img src="screenshots/room-feedback-1280x800.png" alt="PitchRoast Live room with a project card, tagged feedback and a roast timer" />
+    <figcaption>The live room: project card, tag filters, tagged feedback, upvotes and the synced 5-minute roast timer.</figcaption>
+  </figure>
+  <div class="shots">
+    <figure>
+      <img src="screenshots/room-feedback-375x812.png" alt="PitchRoast Live room on a mobile viewport" />
+      <figcaption>Mobile room at 375×812.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/markdown-file-1280x800.png" alt="Downloaded Markdown feedback to-do list" />
+      <figcaption>The exported Markdown checklist, grouped by tag with votes and authors.</figcaption>
+    </figure>
+  </div>
+  <div class="shots">
+    <figure>
+      <img src="screenshots/landing-1280x800.png" alt="PitchRoast Live landing page" />
+      <figcaption>Landing page: create a room or try the demo.</figcaption>
+    </figure>
+    <figure>
+      <img src="screenshots/landing-375x812.png" alt="PitchRoast Live landing page on mobile" />
+      <figcaption>Landing page at 375×812.</figcaption>
+    </figure>
+  </div>
+
+  <h2>How judges can test it in 60 seconds</h2>
+  <ol>
+    <li>Open <strong>[PASTE LIVE URL]</strong> and click <strong>Try the demo</strong> — or create a room with any title, URL and one-line pitch.</li>
+    <li>Enter a display name, then copy the room link from the project card.</li>
+    <li>Open that link in a second tab, private window or phone; join with another name.</li>
+    <li>In tab B, pick <strong>Fix</strong>, type a note and press Enter. It appears in tab A within a second or two.</li>
+    <li>Upvote it in tab B; the count updates in both tabs. Toggle it off and back on.</li>
+    <li>Back in tab A, click <strong>Copy feedback as Markdown</strong> or <strong>Download .md</strong>.</li>
+    <li>Optional: the room creator can start the 5-minute roast timer; reviewers see the countdown and the composer locks when it ends.</li>
+  </ol>
+
+  <div class="callout">
+    <strong>Traction proof:</strong> [PASTE TRACTION PROOF] — for example, a screenshot of the Nexconn console user count after inviting real reviewers, or a short list of rooms and participants. The app creates real <span class="mono">u_</span> users and <span class="mono">pr_</span> rooms in the Nexconn app.
+  </div>
+
+  <h2>Growth path</h2>
+  <p>The wedge is a single review ritual: one link, one room, one export. From there the product can grow without changing the core:</p>
+  <ul>
+    <li><strong>Teams and recurring reviews</strong> — saved project profiles, recurring Monday review rooms, and a history of exports.</li>
+    <li><strong>Reviewer reputation</strong> — accepted-fix rates and helpfulness signals, so the best reviewers surface in a community.</li>
+    <li><strong>Distribution</strong> — shareable roast cards, embeddable review widgets, and templates for demo days and accelerators.</li>
+    <li><strong>Business model</strong> — a free single-room tier, then a paid workspace for teams with private rooms, retention and integrations (Linear, Notion, Slack).</li>
+  </ul>
+  <p>Because rooms are link-based, every shared room is also an acquisition loop: each reviewer who joins sees the product working before they sign up for anything. The next step is to invite real communities, measure rooms created and reviews per room, and turn the export into the habitual end of every pitch review.</p>
+
+  <p class="small">Built with React, TypeScript, Vite, Tailwind CSS, Vercel functions and the Nexconn Chat SDK. No analytics, trackers, external fonts or CDNs. The App Secret never reaches the browser.</p>
+</main>
+</body>
+</html>

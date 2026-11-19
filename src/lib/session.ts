@@ -1,4 +1,4 @@
-import { isValidRoomId, isValidUserId, normalizeName } from './validation';
+import { isValidRoomId, isValidUserId, LIMITS, normalizeName } from './validation';
 
 export interface Identity {
   userId: string;
@@ -8,6 +8,8 @@ export interface Identity {
 export interface RecentRoom {
   roomId: string;
   title: string;
+  /** Encoded room payload, so the room can be reopened from the list. */
+  payload?: string;
   updatedAt: number;
 }
 
@@ -31,6 +33,58 @@ const memory: Record<StoreKind, Map<string, string>> = {
 };
 
 const resolved: Partial<Record<StoreKind, Store>> = {};
+
+function createMemoryStorage(): Storage {
+  const map = new Map<string, string>();
+  return {
+    get length() {
+      return map.size;
+    },
+    clear() {
+      map.clear();
+    },
+    getItem(key) {
+      return map.get(String(key)) ?? null;
+    },
+    key(index) {
+      return [...map.keys()][index] ?? null;
+    },
+    removeItem(key) {
+      map.delete(String(key));
+    },
+    setItem(key, value) {
+      map.set(String(key), String(value));
+    },
+  };
+}
+
+/**
+ * Some embedded/private browsers throw on storage access. The chat SDK also
+ * needs localStorage, so install an in-memory Storage for this page when the
+ * real one is unavailable. Our own stores still fall back to module memory if
+ * the property cannot be replaced.
+ */
+export function ensureBrowserStorage(): void {
+  if (typeof window === 'undefined') return;
+
+  for (const kind of ['sessionStorage', 'localStorage'] as const) {
+    try {
+      const storage = window[kind];
+      const probe = '__pr_probe__';
+      storage.setItem(probe, '1');
+      storage.removeItem(probe);
+    } catch {
+      try {
+        Object.defineProperty(window, kind, {
+          configurable: true,
+          value: createMemoryStorage(),
+        });
+      } catch {
+        // The module-level fallback below still keeps the app usable.
+      }
+    }
+  }
+}
 
 function memoryStore(kind: StoreKind): Store {
   const map = memory[kind];
@@ -112,6 +166,28 @@ export function clearIdentity(): void {
   }
 }
 
+/**
+ * The tab that created a room may start the optional roast timer. This is a
+ * session flag, not an account role: it only exists in the creating tab.
+ */
+export function markRoomCreator(roomId: string): void {
+  if (!isValidRoomId(roomId)) return;
+  try {
+    store('session').setItem(`pr.creator.${roomId}`, '1');
+  } catch {
+    // ignore
+  }
+}
+
+export function isRoomCreator(roomId: string): boolean {
+  if (!isValidRoomId(roomId)) return false;
+  try {
+    return store('session').getItem(`pr.creator.${roomId}`) === '1';
+  } catch {
+    return false;
+  }
+}
+
 export function readLastName(): string {
   try {
     const raw = store('local').getItem(KEYS.lastName);
@@ -139,6 +215,10 @@ function isValidRecentRoom(value: unknown): value is RecentRoom {
     typeof record.title === 'string' &&
     record.title.length > 0 &&
     record.title.length <= 80 &&
+    (record.payload === undefined ||
+      (typeof record.payload === 'string' &&
+        record.payload.length > 0 &&
+        record.payload.length <= LIMITS.payloadMax)) &&
     typeof record.updatedAt === 'number' &&
     Number.isFinite(record.updatedAt)
   );
@@ -150,10 +230,23 @@ export function readRecentRooms(): RecentRoom[] {
   return value.filter(isValidRecentRoom).slice(0, 5);
 }
 
-export function addRecentRoom(input: { roomId: string; title: string; updatedAt?: number }): RecentRoom[] {
+export function addRecentRoom(input: {
+  roomId: string;
+  title: string;
+  payload?: string;
+  updatedAt?: number;
+}): RecentRoom[] {
   if (!isValidRoomId(input.roomId)) return readRecentRooms();
   const title = input.title.trim().slice(0, 80);
   if (!title) return readRecentRooms();
+
+  const previous = readRecentRooms().find((room) => room.roomId === input.roomId);
+  const payload =
+    typeof input.payload === 'string' &&
+    input.payload.length > 0 &&
+    input.payload.length <= LIMITS.payloadMax
+      ? input.payload
+      : previous?.payload;
 
   const entry: RecentRoom = {
     roomId: input.roomId,
@@ -163,6 +256,7 @@ export function addRecentRoom(input: { roomId: string; title: string; updatedAt?
         ? input.updatedAt
         : Date.now(),
   };
+  if (payload) entry.payload = payload;
 
   const existing = readRecentRooms().filter((room) => room.roomId !== entry.roomId);
   const next = [entry, ...existing].slice(0, 5);

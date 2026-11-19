@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   channelIdFor,
-  groupNameFor,
   normalizeName,
   normalizeRoomId,
   normalizeUserId,
@@ -31,6 +30,5 @@ describe('validation', () => {
     expect(normalizeRoomId('0123456789')).toBeNull();
     expect(channelIdFor('demo-abcdefghij')).toBe('pr_demo_abcdefghij');
     expect(channelIdFor('abcdefghij')).toBe('pr_abcdefghij');
-    expect(groupNameFor('abcdefghij')).toBe('PitchRoast abcdefghij');
   });
 });

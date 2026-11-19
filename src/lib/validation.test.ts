@@ -150,6 +150,25 @@ describe('room payload', () => {
     expect(decodeRoomPayload(encodeRaw([valid]))).toBeNull();
   });
 
+  it('rejects timestamps that cannot be shown as a date', () => {
+    const valid = {
+      v: 1,
+      t: 'Title',
+      u: 'https://example.com',
+      p: 'Pitch',
+      c: 1_700_000_000_000,
+    };
+
+    expect(validateRoomPayload({ ...valid, c: -1 })).toBeNull();
+    expect(validateRoomPayload({ ...valid, c: Number.NaN })).toBeNull();
+    expect(validateRoomPayload({ ...valid, c: 9_000_000_000_000_000 })).toBeNull();
+    expect(validateRoomPayload({ ...valid, c: 'now' })).toBeNull();
+    expect(validateRoomPayload({ ...valid, c: 8_640_000_000_000_000 })).toEqual({
+      ...valid,
+      c: 8_640_000_000_000_000,
+    });
+  });
+
   it('rejects invalid UTF-8 bytes', () => {
     const binary = String.fromCharCode(0xff, 0xfe, 0xfd);
     const encoded = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
