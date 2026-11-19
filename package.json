@@ -1,0 +1,41 @@
+{
+  "name": "pitchroast-live",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c cyan,magenta \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:web": "vite",
+    "dev:api": "tsx server/dev.ts",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "check-secret": "node scripts/check-no-secret.mjs",
+    "verify": "npm run typecheck && npm run test && npm run build && npm run check-secret"
+  },
+  "dependencies": {
+    "@nexconn/chat": "26.2.1",
+    "@nexconn/engine": "26.2.1",
+    "express": "5.3.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router-dom": "6.30.6"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@types/express": "5.0.6",
+    "@types/node": "26.6.6",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "@vitejs/plugin-react": "6.3.0",
+    "autoprefixer": "10.6.2",
+    "concurrently": "10.0.7",
+    "postcss": "8.5.33",
+    "tailwindcss": "3.4.19",
+    "tsx": "4.23.15",
+    "typescript": "7.0.2",
+    "vite": "8.3.8",
+    "vitest": "5.1.1"
+  }
+}
