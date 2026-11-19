@@ -1,5 +1,5 @@
 const USER_ID_RE = /^u_[a-f0-9]{16}$/;
-const ROOM_ID_RE = /^(?:demo-)?[a-z0-9]{10}$/;
+const ROOM_ID_RE = /^(?:demo-)?[a-z2-7]{10}$/;
 
 /** Trim, collapse repeated whitespace and enforce 2-24 characters. */
 export function normalizeName(value: unknown): string | null {

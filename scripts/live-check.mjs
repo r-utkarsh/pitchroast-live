@@ -70,7 +70,9 @@ check('invalid JSON returns 400', invalidJson.status === 400);
 const oversized = await post('/api/token', { userId: u1, name: 'x'.repeat(3000) });
 check('oversized body returns 413 or 400', oversized.status === 413 || oversized.status === 400, `status ${oversized.status}`);
 
-const roomId = `prt${Math.random().toString(36).slice(2, 9)}`.slice(0, 10).padEnd(10, '0');
+const BASE32 = 'abcdefghijklmnopqrstuvwxyz234567';
+let roomId = 'prt';
+while (roomId.length < 10) roomId += BASE32[Math.floor(Math.random() * BASE32.length)];
 const join1 = await post('/api/join', { userId: u1, roomId });
 check('POST /api/join returns 200', join1.status === 200, `status ${join1.status}`);
 check('join returns pr_ channel id', join1.data?.channelId === `pr_${roomId}`, join1.data?.channelId);

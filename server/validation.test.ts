@@ -28,6 +28,7 @@ describe('validation', () => {
     expect(normalizeRoomId('demo-abcdefghij')).toBe('demo-abcdefghij');
     expect(normalizeRoomId('ABC')).toBeNull();
     expect(normalizeRoomId('abcdefghijkl')).toBeNull();
+    expect(normalizeRoomId('0123456789')).toBeNull();
     expect(channelIdFor('demo-abcdefghij')).toBe('pr_demo_abcdefghij');
     expect(channelIdFor('abcdefghij')).toBe('pr_abcdefghij');
     expect(groupNameFor('abcdefghij')).toBe('PitchRoast abcdefghij');
