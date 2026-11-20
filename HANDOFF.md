@@ -45,7 +45,7 @@ All five phases are complete. There is no further code phase; the remaining work
 - Room IDs are 10 base32 chars (`a-z2-7`), demo rooms `demo-` + 10; channel ID is `pr_` + roomId with `-` -> `_`.
 - Demo rooms open empty; do not insert mock messages into real channels.
 - Playwright’s `webServer` stops the dev servers, but check ports 5173/8787 at the end of any session anyway.
-- **Vercel API functions must stay CommonJS.** `package.json` intentionally has no `"type": "module"`, and the Vite configs are `.mts`. Vercel keeps ESM `.js` output as ESM when the package says module, and the extensionless `../server/...` imports then crash with `ERR_MODULE_NOT_FOUND` / `FUNCTION_INVOCATION_FAILED`. If you re-add `"type": "module"`, add `.js` extensions to every relative import in `api/` and `server/` first.
+- **Vercel API functions must stay CommonJS.** `package.json` intentionally has no `"type": "module"`, the Vite configs are `.mts`, and `api/tsconfig.json` forces `module: Node16` with `moduleResolution: Node16` for the function build. Vercel keeps ESM `.js` output as ESM when the package says module, and the extensionless `../server/...` imports then crash with `ERR_MODULE_NOT_FOUND` / `FUNCTION_INVOCATION_FAILED`. If you re-add `"type": "module"`, add `.js` extensions to every relative import in `api/` and `server/` first.
 - No write git commands. Do not edit AGENTS.md, SPEC.md or the phase files.
 
 ## Next phase starts with

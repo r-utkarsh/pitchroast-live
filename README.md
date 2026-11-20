@@ -145,7 +145,7 @@ The Playwright suite starts the dev servers itself, creates real `pr_` rooms and
 4. Redeploy after adding the variables. `vercel.json` rewrites all non-API paths to `index.html`, so deep room links work.
 5. Test the live URL on two devices: create a room, open the link on a phone, join, send a Fix, upvote it on the other device, and export the Markdown.
 
-Vercel compiles the `api/` functions to CommonJS, where the extensionless server imports resolve correctly. Do not add `"type": "module"` to `package.json` unless you also add explicit `.js` extensions to every relative import in `api/` and `server/`; otherwise the functions crash at startup with `FUNCTION_INVOCATION_FAILED` / `ERR_MODULE_NOT_FOUND`. The Vite configs use `.mts` so they stay ESM without setting a package-wide module type.
+Vercel compiles the `api/` functions to CommonJS, where the extensionless server imports resolve correctly. `api/tsconfig.json` forces Node16/CommonJS for the function build; keep it. Do not add `"type": "module"` to `package.json` unless you also add explicit `.js` extensions to every relative import in `api/` and `server/`; otherwise the functions crash at startup with `FUNCTION_INVOCATION_FAILED` / `ERR_MODULE_NOT_FOUND`. The Vite configs use `.mts` so they stay ESM without setting a package-wide module type.
 
 If the SDK and the Server API need different regions, change `AreaCode.SG` in `src/lib/chat.ts` as well as `NEXCONN_REGION`.
 
