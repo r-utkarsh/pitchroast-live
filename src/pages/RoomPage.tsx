@@ -2,11 +2,15 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import AppHeader from '../components/AppHeader';
 import StatusIndicator from '../components/StatusIndicator';
+import Icon from '../components/icons';
 import Composer from '../components/room/Composer';
+import ExportCard from '../components/room/ExportCard';
 import FeedbackCard, { PendingFeedbackCard } from '../components/room/FeedbackCard';
 import NameGate from '../components/room/NameGate';
 import ProjectCard from '../components/room/ProjectCard';
+import ReviewersCard from '../components/room/ReviewersCard';
 import {
+  Avatar,
   Banner,
   Button,
   FilterChip,
@@ -15,6 +19,7 @@ import {
 } from '../components/ui';
 import useChatRoom, { type UseChatRoomResult } from '../hooks/useChatRoom';
 import useIdentity from '../hooks/useIdentity';
+import useMediaQuery from '../hooks/useMediaQuery';
 import { buildDigest } from '../lib/digest';
 import { FEEDBACK_TAGS, type FeedbackTag } from '../lib/protocol';
 import { hasVoted, voteCount, type RoomState } from '../lib/reducer';
@@ -73,42 +78,36 @@ function filterCounts(state: RoomState): Record<Filter, number> {
 function EmptyState({
   filter,
   onShowAll,
+  onWrite,
 }: {
   filter: Filter;
   onShowAll: () => void;
+  onWrite: () => void;
 }) {
   return (
-    <div className="grid h-full min-h-[15rem] place-items-center px-4 py-10 text-center">
-      <div>
-        <div className="mx-auto grid h-12 w-12 place-items-center rounded-full border border-ink-700 bg-ink-950">
-          <svg viewBox="0 0 24 24" className="h-5 w-5 text-accent-400" aria-hidden="true">
-            <path
-              d="M12 3c2.6 3.3 4.5 5.2 4.5 8.2a4.5 4.5 0 0 1-9 0c0-1.5.7-2.6 1.9-4.1.4 1.5 1.1 2.2 1.9 2.6-.4-2.6 0-4.5.7-6.7Z"
-              fill="currentColor"
-            />
-            <path
-              d="M6 20h12"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-            />
-          </svg>
-        </div>
-        <p className="mt-3 text-sm font-medium text-ink-100">
-          {filter === 'all'
-            ? 'No feedback yet. Be the first to roast.'
-            : `No ${TAG_META[filter].label} feedback yet.`}
-        </p>
-        <p className="mt-1 text-xs text-ink-500">
-          Pick a tag, then leave one sharp note.
-        </p>
-        {filter !== 'all' ? (
-          <Button variant="secondary" size="sm" className="mt-4" onClick={onShowAll}>
-            Show all feedback
-          </Button>
-        ) : null}
+    <div className="rounded-card border border-dashed border-ink-700 bg-ink-900/40 px-4 py-10 text-center">
+      <div className="mx-auto grid h-12 w-12 place-items-center rounded-full border border-ink-700 bg-ink-900">
+        <Icon name="flame" className="h-5 w-5 text-flame" filled />
       </div>
+      <p className="mt-3 text-[15px] font-bold text-ink-100">
+        {filter === 'all'
+          ? 'No feedback yet. Be the first to roast.'
+          : `No ${TAG_META[filter].label} feedback yet.`}
+      </p>
+      <p className="mt-1 text-xs text-ink-500">
+        {filter === 'all'
+          ? 'Pick a tag, write one honest line, hit send.'
+          : 'Try another tag or show everything.'}
+      </p>
+      {filter !== 'all' ? (
+        <Button variant="secondary" size="sm" className="mt-4" onClick={onShowAll}>
+          Show all feedback
+        </Button>
+      ) : (
+        <Button size="sm" className="mt-4" onClick={onWrite}>
+          Write the first roast
+        </Button>
+      )}
     </div>
   );
 }
@@ -135,6 +134,7 @@ function RoomScreen({
   const [nearBottom, setNearBottom] = useState(true);
   const [newCount, setNewCount] = useState(0);
   const [now, setNow] = useState(() => Date.now());
+  const desktop = useMediaQuery('(min-width: 768px)');
 
   const feedRef = useRef<HTMLDivElement>(null);
   const lastTotalRef = useRef(0);
@@ -316,133 +316,131 @@ function RoomScreen({
       : 'info';
   const canRetry =
     room.status === 'failed' || room.status === 'kicked' || room.status === 'disconnected';
-  const hasBanners = Boolean(room.connectionError || room.notice || actionError || !room.historyAvailable);
+  const hasBanners = Boolean(
+    room.connectionError || room.notice || actionError || !room.historyAvailable,
+  );
+
+  function focusComposer() {
+    setFilter('all');
+    const composer = document.getElementById('composer-text');
+    if (composer instanceof HTMLTextAreaElement) composer.focus();
+  }
 
   return (
-    <div className="min-h-screen">
-      <AppHeader>
+    <div className="flex h-dvh flex-col overflow-hidden">
+      <AppHeader wide>
+        <span className="hidden h-8 items-center gap-2 rounded-full border border-ink-700 bg-ink-850 px-1.5 pr-3 text-xs text-ink-300 sm:inline-flex">
+          <Avatar name={identity.name} size="sm" />
+          <span className="max-w-[150px] truncate">Reviewing as {identity.name}</span>
+        </span>
         <StatusIndicator status={room.status} />
       </AppHeader>
 
-      <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 lg:py-6">
-        <div className="space-y-2">
-          {room.connectionError ? (
-            <Banner
-              tone={connectionTone}
-              action={
-                canRetry ? (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={room.retryConnect}
-                    data-testid="retry-connect"
-                  >
-                    Retry
+      <main className="mx-auto flex min-h-0 w-full max-w-[1280px] flex-1 flex-col px-4 py-4 sm:px-8 md:py-5">
+        {hasBanners ? (
+          <div className="shrink-0 space-y-2 pb-3">
+            {room.connectionError ? (
+              <Banner
+                tone={connectionTone}
+                action={
+                  canRetry ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={room.retryConnect}
+                      data-testid="retry-connect"
+                    >
+                      Retry
+                    </Button>
+                  ) : undefined
+                }
+              >
+                {room.connectionError}
+              </Banner>
+            ) : null}
+
+            {!room.historyAvailable ? (
+              <Banner tone="info">
+                Earlier messages are not available in this room, but new feedback will appear
+                live.
+              </Banner>
+            ) : null}
+
+            {room.notice ? (
+              <Banner
+                tone={room.notice.tone}
+                action={
+                  <Button variant="ghost" size="sm" onClick={room.dismissNotice}>
+                    Dismiss
                   </Button>
-                ) : undefined
-              }
-            >
-              {room.connectionError}
-            </Banner>
-          ) : null}
+                }
+              >
+                {room.notice.text}
+              </Banner>
+            ) : null}
 
-          {!room.historyAvailable ? (
-            <Banner tone="info">
-              Earlier messages are not available in this room, but new feedback will appear
-              live.
-            </Banner>
-          ) : null}
+            {actionError ? (
+              <Banner
+                tone="error"
+                action={
+                  <Button variant="ghost" size="sm" onClick={() => setActionError(null)}>
+                    Dismiss
+                  </Button>
+                }
+              >
+                {actionError}
+              </Banner>
+            ) : null}
+          </div>
+        ) : null}
 
-          {room.notice ? (
-            <Banner
-              tone={room.notice.tone}
-              action={
-                <Button variant="ghost" size="sm" onClick={room.dismissNotice}>
-                  Dismiss
-                </Button>
-              }
-            >
-              {room.notice.text}
-            </Banner>
-          ) : null}
-
-          {actionError ? (
-            <Banner
-              tone="error"
-              action={
-                <Button variant="ghost" size="sm" onClick={() => setActionError(null)}>
-                  Dismiss
-                </Button>
-              }
-            >
-              {actionError}
-            </Banner>
-          ) : null}
-        </div>
-
-        <div
-          className={`grid gap-4 lg:grid-cols-[22rem_minmax(0,1fr)] lg:items-start lg:gap-6 ${
-            hasBanners ? 'mt-4' : ''
-          }`}
-        >
+        <div className="shrink-0 pb-3">
           <ProjectCard
             title={payload.t}
             pitch={payload.p}
             url={payload.u}
             roomId={roomId}
-            createdAt={payload.c}
-            commentCount={room.state.feedback.length}
             reviewerCount={room.state.reviewers.length}
             isDemo={isDemo}
             copiedLink={copied === 'link'}
-            copiedMarkdown={copied === 'markdown'}
             onCopyLink={() => void handleCopyLink()}
             onOpenAnother={handleOpenAnother}
-            onCopyMarkdown={() => void handleCopyMarkdown()}
             onDownload={handleDownload}
           />
+        </div>
 
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-5 md:grid-cols-[minmax(0,1fr)_20rem]">
           <section
-            className="flex min-h-[32rem] flex-col overflow-hidden rounded-2xl border border-ink-700/80 bg-ink-900 lg:h-[calc(100vh-7.5rem)]"
+            className="flex min-h-0 min-w-0 flex-col gap-3"
             aria-label="Live feedback"
             data-testid="room-panel"
             data-ready={room.ready ? 'true' : 'false'}
           >
-            <header className="flex flex-wrap items-center justify-between gap-2 border-b border-ink-800 px-4 py-3">
-              <div>
-                <h2 className="text-sm font-semibold text-ink-100">Live feedback</h2>
-                <p className="mt-0.5 text-[11px] text-ink-500">
-                  {counts.all} {counts.all === 1 ? 'comment' : 'comments'} ·{' '}
-                  {room.state.reviewers.length}{' '}
-                  {room.state.reviewers.length === 1 ? 'reviewer' : 'reviewers'}
-                </p>
-              </div>
-            </header>
-
             {timer || isCreator ? (
               <div
-                className={`flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2 ${
-                  roastEnded
-                    ? 'border-tag-fix/30 bg-tag-fix/10'
-                    : 'border-ink-800 bg-ink-950/40'
+                className={`flex shrink-0 flex-wrap items-center justify-between gap-2 rounded-card border px-3 py-2 ${
+                  roastEnded ? 'border-tag-fix/30 bg-tag-fix/10' : 'border-ink-800 bg-ink-900'
                 }`}
                 data-testid="roast-timer"
               >
-                <div>
-                  <p className="text-xs font-semibold text-ink-100">
-                    {roastEnded
-                      ? 'Roast ended'
-                      : roastActive
-                        ? 'Roast round in progress'
-                        : 'Ready to roast?'}
-                  </p>
-                  <p className="mt-0.5 text-[11px] text-ink-500">
-                    {roastEnded
-                      ? 'Feedback is locked. Start a new round to keep going.'
-                      : roastActive
-                        ? 'Add your sharpest notes before the clock runs out.'
-                        : 'Start a 5-minute round so reviewers focus on the pitch.'}
-                  </p>
+                <div className="flex items-center gap-2">
+                  <Icon name="clock" className="h-4 w-4 text-ink-500" />
+                  <div>
+                    <p className="text-xs font-semibold text-ink-100">
+                      {roastEnded
+                        ? 'Roast ended'
+                        : roastActive
+                          ? 'Roast round in progress'
+                          : 'Ready to roast?'}
+                    </p>
+                    <p className="text-[11px] text-ink-500">
+                      {roastEnded
+                        ? 'Feedback is locked. Start a new round to keep going.'
+                        : roastActive
+                          ? 'Add your sharpest notes before the clock runs out.'
+                          : 'Start a 5-minute round so reviewers focus on the pitch.'}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {roastActive ? (
@@ -470,75 +468,111 @@ function RoomScreen({
               </div>
             ) : null}
 
-            <div
-              className="flex flex-wrap items-center gap-2 border-b border-ink-800 px-4 py-2"
-              role="group"
-              aria-label="Filter and sort feedback"
-            >
-              <FilterChip
-                selected={filter === 'all'}
-                onClick={() => setFilter('all')}
-                count={counts.all}
-                testId="filter-all"
+            <div className="flex shrink-0 flex-wrap items-center justify-between gap-2">
+              <div
+                className="flex w-full items-center gap-1.5 overflow-x-auto md:w-auto"
+                role="group"
+                aria-label="Filter feedback"
               >
-                All
-              </FilterChip>
-              {FEEDBACK_TAGS.map((tag) => (
                 <FilterChip
-                  key={tag}
-                  selected={filter === tag}
-                  onClick={() => setFilter(tag)}
-                  count={counts[tag]}
-                  testId={`filter-${tag}`}
+                  selected={filter === 'all'}
+                  onClick={() => setFilter('all')}
+                  count={counts.all}
+                  testId="filter-all"
                 >
-                  {TAG_META[tag].label}
+                  All
                 </FilterChip>
-              ))}
-              <FilterChip
-                selected={top}
-                onClick={() => setTop((value) => !value)}
-                testId="sort-toggle"
-              >
-                Top feedback
-              </FilterChip>
+                {FEEDBACK_TAGS.map((tag) => (
+                  <FilterChip
+                    key={tag}
+                    selected={filter === tag}
+                    onClick={() => setFilter(tag)}
+                    count={counts[tag]}
+                    icon={TAG_META[tag].icon}
+                    testId={`filter-${tag}`}
+                  >
+                    {TAG_META[tag].label}
+                  </FilterChip>
+                ))}
+              </div>
+
+              <div className="flex w-full items-center justify-between gap-3 md:w-auto md:justify-end">
+                <span className="text-xs text-ink-500 md:hidden">
+                  {counts.all} {counts.all === 1 ? 'comment' : 'comments'}
+                </span>
+                <div className="flex items-center gap-4 text-[13px] font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => setTop(false)}
+                    aria-pressed={!top}
+                    className={`relative pb-1 transition-colors ${
+                      !top
+                        ? 'text-ink-100 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-accent-500'
+                        : 'text-ink-500 hover:text-ink-300'
+                    }`}
+                  >
+                    Newest
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTop((value) => !value)}
+                    aria-pressed={top}
+                    data-testid="sort-toggle"
+                    title="Sort by upvotes"
+                    className={`relative pb-1 transition-colors ${
+                      top
+                        ? 'text-ink-100 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-accent-500'
+                        : 'text-ink-500 hover:text-ink-300'
+                    }`}
+                  >
+                    Top feedback
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="relative min-h-0 flex-1">
               <div
                 ref={feedRef}
                 onScroll={handleFeedScroll}
-                className="max-h-[55vh] overflow-y-auto p-3 sm:p-4 lg:h-full lg:max-h-none"
+                className="h-full overflow-y-auto pr-1"
                 data-testid="feedback-list"
                 aria-busy={room.historyLoading}
               >
                 {showSkeleton ? (
                   <SkeletonRows />
                 ) : isEmpty ? (
-                  <EmptyState filter={filter} onShowAll={() => setFilter('all')} />
+                  <EmptyState
+                    filter={filter}
+                    onShowAll={() => setFilter('all')}
+                    onWrite={focusComposer}
+                  />
                 ) : (
-                  <div className="space-y-3">
+                  <ul className="space-y-2">
                     {items.map((item) => {
                       const voted = hasVoted(room.state, item.id, identity.userId);
                       return (
-                        <FeedbackCard
-                          key={item.id}
-                          item={item}
-                          votes={voteCount(room.state, item.id)}
-                          voted={voted}
-                          disabled={!canInteract}
-                          onVote={() => void room.toggleVote(item.id, voted)}
-                        />
+                        <li key={item.id}>
+                          <FeedbackCard
+                            item={item}
+                            votes={voteCount(room.state, item.id)}
+                            voted={voted}
+                            disabled={!canInteract}
+                            onVote={() => void room.toggleVote(item.id, voted)}
+                          />
+                        </li>
                       );
                     })}
                     {pendingItems.map((item) => (
-                      <PendingFeedbackCard
-                        key={item.event.id}
-                        item={item}
-                        onRetry={() => void room.retryFeedback(item.event.id)}
-                        onRemove={() => room.removeFailed(item.event.id)}
-                      />
+                      <li key={item.event.id}>
+                        <PendingFeedbackCard
+                          item={item}
+                          onRetry={() => void room.retryFeedback(item.event.id)}
+                          onRemove={() => room.removeFailed(item.event.id)}
+                        />
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 )}
               </div>
 
@@ -546,13 +580,14 @@ function RoomScreen({
                 <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
                   <Button
                     size="sm"
-                    className="pointer-events-auto shadow-lg"
+                    className="pointer-events-auto rounded-full px-4 shadow-float"
                     data-testid="new-messages"
                     onClick={() => {
                       scrollToBottom(true);
                       setNewCount(0);
                     }}
                   >
+                    <Icon name="arrowUp" className="h-3.5 w-3.5" />
                     {newCount} new {newCount === 1 ? 'message' : 'messages'}
                   </Button>
                 </div>
@@ -566,6 +601,18 @@ function RoomScreen({
               onSend={room.sendFeedback}
             />
           </section>
+
+          {desktop ? (
+            <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto">
+              <ReviewersCard reviewers={room.state.reviewers} feedback={room.state.feedback} />
+              <ExportCard
+                digest={digestText()}
+                copiedMarkdown={copied === 'markdown'}
+                onCopyMarkdown={() => void handleCopyMarkdown()}
+                onDownload={handleDownload}
+              />
+            </aside>
+          ) : null}
         </div>
 
         <p className="sr-only" aria-live="polite">
@@ -617,9 +664,7 @@ export default function RoomPage() {
   }
 
   if (!identity) {
-    return (
-      <NameGate title={payload.t} lastName={lastName} onClaim={handleClaim} />
-    );
+    return <NameGate title={payload.t} lastName={lastName} onClaim={handleClaim} />;
   }
 
   return (

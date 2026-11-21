@@ -28,7 +28,7 @@ export interface PendingFeedback {
 }
 
 export interface ChatNotice {
-  tone: 'info' | 'error' | 'success';
+  tone: 'info' | 'warning' | 'error' | 'success';
   text: string;
 }
 
@@ -349,7 +349,7 @@ export default function useChatRoom(identity: Identity | null, roomId: string): 
         if (adapterRef.current !== adapter) return 'blocked';
         if (error instanceof ChatError && error.code === 'cooldown') {
           updatePending((list) => list.filter((item) => item.event.id !== event.id));
-          setNotice({ tone: 'error', text: cooldownMessage(error) });
+          setNotice({ tone: 'warning', text: cooldownMessage(error) });
           return 'blocked';
         }
 
@@ -400,7 +400,7 @@ export default function useChatRoom(identity: Identity | null, roomId: string): 
       } catch (error) {
         if (adapterRef.current !== adapter) return;
         if (error instanceof ChatError && error.code === 'cooldown') {
-          setNotice({ tone: 'error', text: cooldownMessage(error) });
+          setNotice({ tone: 'warning', text: cooldownMessage(error) });
         }
         updatePending((list) =>
           list.map((entry) =>
@@ -448,7 +448,7 @@ export default function useChatRoom(identity: Identity | null, roomId: string): 
         if (revert) ingestRef.current(revert, localMessage(identity, JSON.stringify(revert)));
 
         if (error instanceof ChatError && error.code === 'cooldown') {
-          setNotice({ tone: 'error', text: cooldownMessage(error) });
+          setNotice({ tone: 'warning', text: cooldownMessage(error) });
         } else {
           setNotice({ tone: 'error', text: 'Your vote did not send. Please retry.' });
         }
@@ -474,7 +474,8 @@ export default function useChatRoom(identity: Identity | null, roomId: string): 
     } catch (error) {
       if (adapterRef.current !== adapter) return;
       setNotice({
-        tone: 'error',
+        tone:
+          error instanceof ChatError && error.code === 'cooldown' ? 'warning' : 'error',
         text:
           error instanceof ChatError && error.code === 'cooldown'
             ? cooldownMessage(error)

@@ -1,13 +1,51 @@
 import type { ChatStatus } from '../lib/chat';
 
-const META: Record<ChatStatus, { label: string; dot: string; pulse: boolean }> = {
-  idle: { label: 'Starting', dot: 'bg-ink-500', pulse: false },
-  connecting: { label: 'Connecting', dot: 'bg-amber-400', pulse: true },
-  connected: { label: 'Live', dot: 'bg-emerald-400', pulse: false },
-  reconnecting: { label: 'Reconnecting', dot: 'bg-amber-400', pulse: true },
-  disconnected: { label: 'Offline', dot: 'bg-tag-fix', pulse: false },
-  kicked: { label: 'Session ended', dot: 'bg-tag-fix', pulse: false },
-  failed: { label: 'Connection failed', dot: 'bg-tag-fix', pulse: false },
+const META: Record<
+  ChatStatus,
+  { label: string; tone: string; dot: string; pulse: boolean }
+> = {
+  idle: {
+    label: 'Starting',
+    tone: 'border-ink-700 bg-ink-850 text-ink-300',
+    dot: 'bg-ink-500',
+    pulse: false,
+  },
+  connecting: {
+    label: 'Connecting',
+    tone: 'border-accent-400/40 bg-accent-700/40 text-accent-300',
+    dot: 'bg-accent-300',
+    pulse: true,
+  },
+  connected: {
+    label: 'Live',
+    tone: 'border-ok/30 bg-ok/10 text-ok',
+    dot: 'bg-ok',
+    pulse: false,
+  },
+  reconnecting: {
+    label: 'Reconnecting',
+    tone: 'border-tag-hook/40 bg-tag-hook/10 text-tag-hook',
+    dot: 'bg-tag-hook',
+    pulse: true,
+  },
+  disconnected: {
+    label: 'Offline',
+    tone: 'border-tag-fix/40 bg-tag-fix/10 text-tag-fix',
+    dot: 'bg-tag-fix',
+    pulse: false,
+  },
+  kicked: {
+    label: 'Session ended',
+    tone: 'border-tag-fix/40 bg-tag-fix/10 text-tag-fix',
+    dot: 'bg-tag-fix',
+    pulse: false,
+  },
+  failed: {
+    label: 'Connection failed',
+    tone: 'border-tag-fix/40 bg-tag-fix/10 text-tag-fix',
+    dot: 'bg-tag-fix',
+    pulse: false,
+  },
 };
 
 export default function StatusIndicator({
@@ -17,18 +55,20 @@ export default function StatusIndicator({
   status: ChatStatus | null;
   className?: string;
 }) {
-  const meta = status ? META[status] : { label: 'Not connected', dot: 'bg-ink-500', pulse: false };
+  const meta = status
+    ? META[status]
+    : { label: 'Not connected', tone: 'border-ink-700 bg-ink-850 text-ink-300', dot: 'bg-ink-500', pulse: false };
 
   return (
     <span
       role="status"
       aria-live="polite"
       data-testid="chat-status"
-      className={`inline-flex items-center gap-1.5 rounded-full border border-ink-700/80 bg-ink-900 px-2.5 py-1 text-xs font-medium text-ink-300 ${className}`}
+      className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-xs font-semibold ${meta.tone} ${className}`}
     >
       <span
         aria-hidden="true"
-        className={`h-2 w-2 rounded-full ${meta.dot} ${meta.pulse ? 'motion-safe:animate-pulse' : ''}`}
+        className={`h-1.5 w-1.5 rounded-full ${meta.dot} ${meta.pulse ? 'motion-safe:animate-pulse' : ''}`}
       />
       {meta.label}
     </span>

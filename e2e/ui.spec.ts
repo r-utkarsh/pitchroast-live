@@ -243,7 +243,9 @@ test('create, share, roast, upvote, refresh, export, recover and adapt', async (
     });
     await pageA.screenshot({ path: 'test-results/ui-375.png', fullPage: true });
 
-    // "Open as another reviewer" must force a fresh name gate.
+    // "Open as another reviewer" must force a fresh name gate. The mobile
+    // project card is collapsed by default, so expand it first.
+    await pageA.getByTestId('project-toggle').click();
     const popupPromise = contextA.waitForEvent('page');
     await pageA.getByTestId('open-as-reviewer').click();
     const popup = await popupPromise;
@@ -276,6 +278,9 @@ test('create, share, roast, upvote, refresh, export, recover and adapt', async (
     await pageA.goto('/demo');
     await expect(pageA).toHaveURL(/\/r\/demo-[a-z2-7]{10}\?d=/);
     await expect(pageA.getByTestId('room-title')).toHaveText('Nebula Notes');
+    // The demo project has no real site, so it must not offer a dead link.
+    await expect(pageA.getByTestId('demo-project-note')).toBeVisible();
+    await expect(pageA.getByTestId('open-live-project')).toHaveCount(0);
 
     await pageA.goto('/does-not-exist');
     await expect(pageA.getByTestId('not-found')).toBeVisible();
@@ -287,6 +292,31 @@ test('create, share, roast, upvote, refresh, export, recover and adapt', async (
     await contextB.close();
     await contextC.close();
   }
+});
+
+test('pitch field keeps Shift+Enter as a newline and Enter creates the room', async ({
+  page,
+}) => {
+  const suffix = Math.random().toString(36).slice(2, 6);
+  const title = `Linebreak ${suffix}`;
+  const pitch = 'First line of the pitch.\nSecond line of the pitch.';
+
+  await page.goto('/');
+
+  await page.getByTestId('create-title').fill(title);
+  await page.getByTestId('create-url').fill('example.com/linebreak');
+  await page.getByTestId('create-pitch').fill('First line of the pitch.');
+  await page.getByTestId('create-pitch').press('Shift+Enter');
+  await page.getByTestId('create-pitch').type('Second line of the pitch.');
+
+  // Shift+Enter is a newline, not a submit: the form stays on the landing page.
+  await expect(page.getByTestId('create-pitch')).toHaveValue(pitch);
+  await expect(page).toHaveURL(/^http:\/\/localhost:5173\/$/);
+
+  // Plain Enter submits the same way the Create room button does.
+  await page.getByTestId('create-pitch').press('Enter');
+  await expect(page).toHaveURL(/\/r\/[a-z2-7]{10}\?d=/);
+  await expect(page.getByTestId('gate-title')).toContainText(title);
 });
 
 test('works when browser storage is unavailable', async ({ browser }) => {

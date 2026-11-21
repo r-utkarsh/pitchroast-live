@@ -48,6 +48,11 @@ describe('normalizeTitle and normalizePitch', () => {
     expect(normalizePitch('')).toBeNull();
     expect(normalizePitch('x'.repeat(141))).toBeNull();
   });
+
+  it('keeps line breaks inside the pitch', () => {
+    expect(normalizePitch('Line one\nLine two')).toBe('Line one\nLine two');
+    expect(normalizePitch('  Line one\nLine two  ')).toBe('Line one\nLine two');
+  });
 });
 
 describe('normalizeUrl', () => {
